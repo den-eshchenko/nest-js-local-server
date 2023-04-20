@@ -7,8 +7,8 @@ export class UsersController {
   constructor(private usersService: UsersService) {}
 
   @Post('addUser')
-  addUser(@Body() { requestData }: { requestData: User }) {
-    return this.usersService.addUser(requestData);
+  addUser(@Body() user: User) {
+    return this.usersService.addUser(user);
   }
   // @UseGuards(JwtAuthGuard)
   @Get('getAll')
