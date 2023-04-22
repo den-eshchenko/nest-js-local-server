@@ -15,7 +15,7 @@ export class UsersService {
 
     if (!foundUser) {
       throw new HttpException(
-        'Пользователь не найденЙ!',
+        'Пользователь не найден!',
         HttpStatus.BAD_REQUEST,
       );
     }
@@ -24,14 +24,15 @@ export class UsersService {
   }
   addFriend(userId: string, friendId: string) {
     const currentUser = this.users.find((user) => user.id === userId);
+    const foundFriend = this.users.find((user) => user.id === friendId);
 
-    if (currentUser) {
+    if (currentUser && foundFriend) {
       currentUser.friends.push(friendId);
     }
 
-    if (!currentUser) {
+    if (!currentUser || !foundFriend) {
       throw new HttpException(
-        'Пользователь не найденЙ!',
+        `Пользователь c id ${currentUser?.id || foundFriend?.id} не найден!`,
         HttpStatus.BAD_REQUEST,
       );
     }

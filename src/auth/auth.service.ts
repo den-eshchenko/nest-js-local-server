@@ -20,20 +20,20 @@ export class AuthService {
 
     if (isRegistered) {
       const jwtPayload = { username: user.name };
-      const [at, rt] = await Promise.all([
+      const [access_token, refresh_token] = await Promise.all([
         this.jwtService.signAsync(jwtPayload, {
-          secret: process.env.JWT_ACCESS_KEY,
-          expiresIn: '1m',
+          secret: process.env.JWT_SECRET_KEY,
+          expiresIn: process.env.ACCESS_TOKEN_EXPIRES,
         }),
         this.jwtService.signAsync(jwtPayload, {
-          secret: process.env.JWT_REFRESH_KEY,
-          expiresIn: '2m',
+          secret: process.env.JWT_SECRET_KEY,
+          expiresIn: process.env.REFRESH_TOKEN_EXPIRES,
         }),
       ]);
 
       return {
-        access_token: at,
-        refresh_token: rt,
+        access_token,
+        refresh_token,
       };
     }
 
@@ -59,13 +59,17 @@ export class AuthService {
   async refresh(refresh_token: string) {
     try {
       const jwtPayload = await this.jwtService.verifyAsync(refresh_token, {
-        secret: process.env.JWT_REFRESH_KEY,
+        secret: process.env.JWT_SECRET_KEY,
       });
+      const access_token = this.jwtService.sign(jwtPayload, {
+        secret: process.env.JWT_SECRET_KEY,
+      });
+
       return {
-        access_token: this.jwtService.sign(jwtPayload),
+        access_token,
       };
-    } catch (e) {
-      throw new UnauthorizedException();
+    } catch (error) {
+      throw new UnauthorizedException(error);
     }
   }
 }

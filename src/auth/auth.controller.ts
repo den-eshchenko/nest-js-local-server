@@ -1,15 +1,14 @@
-import { Body, Controller, Post } from '@nestjs/common';
+import { Body, Controller, Post, UseGuards } from '@nestjs/common';
 import { User } from 'src/types/users';
 import { AuthService } from './auth.service';
+import { AuthGuard } from './guards/auth.guard';
 
 @Controller('auth')
 export class AuthController {
   constructor(private authService: AuthService) {}
 
-  // @UseGuards(AuthGuard('pass'))
   @Post('authorization')
   async authorization(@Body() user: User) {
-    console.log('authorizationReq ', user);
     return this.authService.authorization(user);
   }
 
@@ -18,9 +17,9 @@ export class AuthController {
     return this.authService.registration(user);
   }
 
-  // @Post('refresh-accessToken')
-  // async refresh(@Body() body: RefreshToken) {
-  //   console.log('refresh-accessTokenReq ', body);
-  //   return this.authService.refresh(body.refresh_token);
-  // }
+  // @UseGuards(AuthGuard)
+  @Post('refresh-token')
+  async refresh(@Body() { refresh_token }: { refresh_token: string }) {
+    return this.authService.refresh(refresh_token);
+  }
 }
