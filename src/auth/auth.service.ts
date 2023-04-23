@@ -5,6 +5,7 @@ import {
   UnauthorizedException,
 } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
+import { SignIn } from 'src/types/auth';
 import { User } from 'src/types/users';
 import { UsersService } from 'src/users/users.service';
 
@@ -15,11 +16,11 @@ export class AuthService {
     private usersService: UsersService,
   ) {}
 
-  async authorization(user: User) {
-    const isRegistered = !!this.usersService.getUser(user.id);
+  async authorization(data: SignIn) {
+    const isRegistered = !!this.usersService.getUserByName(data.username);
 
     if (isRegistered) {
-      const jwtPayload = { username: user.name };
+      const jwtPayload = { username: data.username };
       const [access_token, refresh_token] = await Promise.all([
         this.jwtService.signAsync(jwtPayload, {
           secret: process.env.JWT_SECRET_KEY,

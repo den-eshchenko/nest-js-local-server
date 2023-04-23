@@ -7,9 +7,11 @@ export class UsersService {
   addUser(user: User) {
     this.users.push(user);
   }
+
   getAllUsers() {
     return this.users;
   }
+
   getUser(id: string) {
     const foundUser = this.users.find((user) => user.id === id);
 
@@ -20,8 +22,22 @@ export class UsersService {
       );
     }
 
-    return this.users.find((user) => user.id === id);
+    return foundUser;
   }
+
+  getUserByName(name: string) {
+    const foundUser = this.users.find((user) => user.name === name);
+
+    if (!foundUser) {
+      throw new HttpException(
+        'Пользователь не найден!',
+        HttpStatus.BAD_REQUEST,
+      );
+    }
+
+    return foundUser;
+  }
+
   addFriend(userId: string, friendId: string) {
     const currentUser = this.users.find((user) => user.id === userId);
     const foundFriend = this.users.find((user) => user.id === friendId);
