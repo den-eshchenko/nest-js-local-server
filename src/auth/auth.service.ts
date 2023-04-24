@@ -5,8 +5,7 @@ import {
   UnauthorizedException,
 } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
-import { SignIn } from 'src/types/auth';
-import { User } from 'src/types/users';
+import { SignIn, SignUp } from 'src/types/auth';
 import { UsersService } from 'src/users/users.service';
 
 @Injectable()
@@ -17,10 +16,10 @@ export class AuthService {
   ) {}
 
   async authorization(data: SignIn) {
-    const isRegistered = !!this.usersService.getUserByName(data.username);
+    const isRegistered = !!this.usersService.getUserByName(data.login);
 
     if (isRegistered) {
-      const jwtPayload = { username: data.username };
+      const jwtPayload = { username: data.login };
       const [access_token, refresh_token] = await Promise.all([
         this.jwtService.signAsync(jwtPayload, {
           secret: process.env.JWT_SECRET_KEY,
@@ -41,9 +40,9 @@ export class AuthService {
     throw new UnauthorizedException();
   }
 
-  async registration(user: User) {
-    if (user.name && user.email) {
-      this.usersService.addUser(user);
+  async registration(data: SignUp) {
+    if (data.login && data.email) {
+      this.usersService.addUser(data);
 
       return new HttpException(
         'Вы успешно зарегистрированы!',

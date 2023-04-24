@@ -1,6 +1,5 @@
 import { Body, Controller, Post } from '@nestjs/common';
-import { SignIn } from 'src/types/auth';
-import { User } from 'src/types/users';
+import { SignIn, SignUp } from 'src/types/auth';
 import { AuthService } from './auth.service';
 
 @Controller('auth')
@@ -13,8 +12,8 @@ export class AuthController {
   }
 
   @Post('registration')
-  async registration(@Body() user: User) {
-    return this.authService.registration(user);
+  async registration(@Body() data: SignUp) {
+    return this.authService.registration(data);
   }
 
   @Post('refresh-token')

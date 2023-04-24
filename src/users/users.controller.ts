@@ -1,6 +1,6 @@
 import { Body, Controller, Get, Post, UseGuards } from '@nestjs/common';
 import { AuthGuard } from 'src/auth/guards/auth.guard';
-import { User } from 'src/types/users';
+import { SignUp } from 'src/types/auth';
 import { UsersService } from './users.service';
 
 @Controller('users')
@@ -9,8 +9,8 @@ export class UsersController {
 
   @UseGuards(AuthGuard)
   @Post('addUser')
-  addUser(@Body() user: User) {
-    return this.usersService.addUser(user);
+  addUser(@Body() data: SignUp) {
+    return this.usersService.addUser(data);
   }
 
   @UseGuards(AuthGuard)
@@ -21,7 +21,7 @@ export class UsersController {
     return this.usersService.addFriend(userId, friendId);
   }
 
-  @UseGuards(AuthGuard)
+  // @UseGuards(AuthGuard)
   @Get('getAll')
   getAll() {
     return this.usersService.getAllUsers();

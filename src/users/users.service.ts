@@ -1,11 +1,16 @@
 import { HttpException, HttpStatus, Injectable } from '@nestjs/common';
+import { v4 as uuidv4 } from 'uuid';
+import { SignUp } from 'src/types/auth';
 import { User } from 'src/types/users';
 @Injectable()
 export class UsersService {
   private readonly users: User[] = [];
 
-  addUser(user: User) {
-    this.users.push(user);
+  addUser(data: SignUp) {
+    const id = uuidv4();
+    const friends = [];
+
+    this.users.push({ ...data, id, friends });
   }
 
   getAllUsers() {
@@ -25,8 +30,8 @@ export class UsersService {
     return foundUser;
   }
 
-  getUserByName(name: string) {
-    const foundUser = this.users.find((user) => user.name === name);
+  getUserByName(login: string) {
+    const foundUser = this.users.find((user) => user.login === login);
 
     if (!foundUser) {
       throw new HttpException(
