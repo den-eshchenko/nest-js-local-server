@@ -16,9 +16,9 @@ export class AuthService {
   ) {}
 
   async authorization(data: SignIn) {
-    const isRegistered = !!this.usersService.getUserByName(data.login);
+    const foundUser = this.usersService.getUserByName(data.login);
 
-    if (isRegistered) {
+    if (foundUser) {
       const jwtPayload = { username: data.login };
       const [access_token, refresh_token] = await Promise.all([
         this.jwtService.signAsync(jwtPayload, {
@@ -34,6 +34,7 @@ export class AuthService {
       return {
         access_token,
         refresh_token,
+        login: foundUser.login,
       };
     }
 
