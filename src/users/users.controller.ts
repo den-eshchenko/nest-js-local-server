@@ -1,4 +1,4 @@
-import { Body, Controller, Get, Post, UseGuards } from '@nestjs/common';
+import { Body, Controller, Get, Param, Post, UseGuards } from '@nestjs/common';
 import { AuthGuard } from 'src/auth/guards/auth.guard';
 import { SignUp } from 'src/types/auth';
 import { UsersService } from './users.service';
@@ -28,8 +28,20 @@ export class UsersController {
   }
 
   @UseGuards(AuthGuard)
-  @Get('getUser')
+  @Get('getUserById')
   getUser(@Body() { id }: { id: string }) {
-    return this.usersService.getUser(id);
+    return this.usersService.getUserById(id);
+  }
+
+  @Get('rooms/:userLogin')
+  getRooms(@Param() { userLogin }: { userLogin: string }) {
+    return this.usersService.getAllRooms(userLogin);
+  }
+
+  @Get('rooms/:userLogin/:roomName')
+  getRoomData(
+    @Param() { userLogin, roomName }: { userLogin: string; roomName: string },
+  ) {
+    return this.usersService.getRoomData(userLogin, roomName);
   }
 }

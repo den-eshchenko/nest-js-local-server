@@ -1,14 +1,10 @@
 import {
-  MessageBody,
   SubscribeMessage,
   WebSocketGateway,
   WebSocketServer,
-  WsResponse,
 } from '@nestjs/websockets';
-import { from, Observable } from 'rxjs';
-import { map } from 'rxjs/operators';
-import { Server } from 'socket.io';
-import { TRooms } from 'src/types/events';
+import { Server, Socket } from 'socket.io';
+import { UsersService } from 'src/users/users.service';
 
 @WebSocketGateway({
   cors: {
@@ -18,26 +14,47 @@ import { TRooms } from 'src/types/events';
 export class EventsGateway {
   @WebSocketServer()
   server: Server;
-  rooms: TRooms;
 
-  @SubscribeMessage('messages')
-  findAll(@MessageBody() data: any): Observable<WsResponse<number>> {
-    // console.log('server', this.server);
-    return from([1, 2, 3]).pipe(
-      map((item) => ({ event: 'events', data: item })),
-    );
-  }
+  constructor(private usersService: UsersService) {}
+
+  // @SubscribeMessage('rooms')
+  // connection(client: Socket, userLogin: string) {
+  //   const rooms = this.usersService.getAllRooms(userLogin);
+  //   console.log(rooms);
+
+  //   rooms.forEach((roomName) => {
+  //     client.join(roomName);
+  //   });
+
+  //   client.to(client.id).emit('rooms', rooms);
+  // }
 
   @SubscribeMessage('rooms/join')
   roomsJoin(
-    @MessageBody() { roomId, userId }: { roomId: string; userId: string },
+    client: Socket,
+    { roomName, userLogin }: { roomName: string; userLogin: string },
   ) {
-    this.server.socketsJoin(roomId);
-    // this.rooms[roomId].users.push({ socketId: this.server. });
+    client.join(roomName);
+    this.usersService.addRoom(userLogin, roomName);
+
+    client.to(roomName).emit(`rooms/joined`, userLogin);
   }
 
-  @SubscribeMessage('identity')
-  async identity(@MessageBody() data: number): Promise<number> {
-    return data;
+  @SubscribeMessage('rooms/message')
+  roomsMessage(
+    client: Socket,
+    {
+      roomName,
+      userLogin,
+      message,
+    }: { roomName: string; userLogin: string; message: string },
+  ) {
+    const foundUser = this.usersService.getUserByName(userLogin);
+
+    client.to(roomName).emit('rooms/message', {
+      from: foundUser.login,
+      email: foundUser.email,
+      message,
+    });
   }
 }

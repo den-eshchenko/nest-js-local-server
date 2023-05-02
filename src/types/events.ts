@@ -1,6 +1,12 @@
+export type TMessage = {
+  form: string;
+  message: string;
+  email: string;
+};
+
 export type TRoom = {
-  users: { socketId: string; login: string }[];
-  messages: string[];
+  users: string[];
+  messages: TMessage[];
 };
 
 export type TRooms = Record<string, TRoom>;
