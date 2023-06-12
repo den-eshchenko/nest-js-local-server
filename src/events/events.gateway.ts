@@ -17,32 +17,31 @@ export class EventsGateway {
 
   constructor(private usersService: UsersService) {}
 
-  // @SubscribeMessage('rooms')
-  // connection(client: Socket, userLogin: string) {
-  //   const rooms = this.usersService.getAllRooms(userLogin);
-  //   console.log(rooms);
+  @SubscribeMessage('rooms/connect')
+  connection(client: Socket, userLogin: string) {
+    const rooms = this.usersService.getRooms(userLogin);
 
-  //   rooms.forEach((roomName) => {
-  //     client.join(roomName);
-  //   });
-
-  //   client.to(client.id).emit('rooms', rooms);
-  // }
+    Object.keys(rooms).forEach((roomName) => {
+      client.join(roomName);
+    });
+  }
 
   @SubscribeMessage('rooms/join')
   roomsJoin(
     client: Socket,
     { roomName, userLogin }: { roomName: string; userLogin: string },
   ) {
-    client.join(roomName);
-    this.usersService.addRoom(userLogin, roomName);
+    const joinMessage = this.usersService.addRoom(userLogin, roomName);
 
-    client.to(roomName).emit(`rooms/joined`, userLogin);
+    client.join(roomName);
+    this.server
+      .to(roomName)
+      .emit('rooms/joined', { roomName, message: joinMessage });
   }
 
   @SubscribeMessage('rooms/message')
   roomsMessage(
-    client: Socket,
+    _: Socket,
     {
       roomName,
       userLogin,
@@ -50,10 +49,20 @@ export class EventsGateway {
     }: { roomName: string; userLogin: string; message: string },
   ) {
     const foundUser = this.usersService.getUserByName(userLogin);
+    this.usersService.addMessage({
+      message: {
+        email: foundUser?.email,
+        message,
+        userLogin,
+      },
+      roomName,
+      userLogin,
+    });
 
-    client.to(roomName).emit('rooms/message', {
-      from: foundUser.login,
-      email: foundUser.email,
+    this.server.to(roomName).emit('rooms/message', {
+      roomName,
+      userLogin: foundUser?.login,
+      email: foundUser?.email,
       message,
     });
   }

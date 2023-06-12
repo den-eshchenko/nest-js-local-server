@@ -1,4 +1,4 @@
-import { TRooms } from './events';
+// import { TRooms } from './events';
 
 export type User = {
   id: string;
@@ -6,6 +6,6 @@ export type User = {
   fullName: string;
   email: string;
   password: string;
-  friends?: string[];
-  rooms?: TRooms;
+  friends: string[];
+  // rooms: TRooms;
 };

@@ -34,14 +34,7 @@ export class UsersController {
   }
 
   @Get('rooms/:userLogin')
-  getRooms(@Param() { userLogin }: { userLogin: string }) {
-    return this.usersService.getAllRooms(userLogin);
-  }
-
-  @Get('rooms/:userLogin/:roomName')
-  getRoomData(
-    @Param() { userLogin, roomName }: { userLogin: string; roomName: string },
-  ) {
-    return this.usersService.getRoomData(userLogin, roomName);
+  getRoomData(@Param() { userLogin }: { userLogin: string }) {
+    return this.usersService.getRooms(userLogin);
   }
 }

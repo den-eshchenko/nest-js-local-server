@@ -3,16 +3,20 @@ import { v4 as uuidv4 } from 'uuid';
 import { SignUp } from 'src/types/auth';
 import { User } from 'src/types/users';
 import { WsException } from '@nestjs/websockets';
-import { TMessage } from 'src/types/events';
+import { TMessage, TRooms } from 'src/types/events';
 @Injectable()
 export class UsersService {
   private readonly users: User[] = [];
+  private readonly rooms: TRooms = {};
 
   addUser(data: SignUp) {
     const id = uuidv4();
-    const friends = [];
 
-    this.users.push({ ...data, id, friends });
+    this.users.push({
+      ...data,
+      id,
+      friends: [],
+    });
   }
 
   getAllUsers() {
@@ -63,27 +67,49 @@ export class UsersService {
 
   addRoom(userLogin: string, roomName: string) {
     const foundUser = this.users.find((user) => user.login === userLogin);
-    const isFoundRoom = Object.keys(foundUser?.rooms || {}).includes?.(
-      roomName,
-    );
+    const isFoundRoom = Object.keys(this.rooms).includes?.(roomName);
 
     if (!foundUser) {
       throw new WsException({ message: 'Такой пользователь не найден!' });
     }
 
+    const joinMessage = {
+      email: foundUser.email,
+      message: 'is joined to channel',
+      userLogin,
+      isJoin: true,
+    };
+
     if (isFoundRoom) {
-      throw new WsException({ message: 'У вас уже есть такая комната!' });
+      this.rooms[roomName] = {
+        ...this.rooms[roomName],
+        users: [...this.rooms[roomName].users, userLogin],
+        messages: [...this.rooms[roomName].messages, joinMessage],
+      };
+
+      return joinMessage;
     }
 
-    foundUser.rooms[roomName] = { messages: [], users: [] };
-    return new HttpException(`Комната добавлена`, HttpStatus.CREATED);
+    this.rooms[roomName] = {
+      messages: [],
+      users: [userLogin],
+      roomCreator: userLogin,
+    };
+
+    return;
   }
 
-  addMessage(userLogin: string, roomName: string, message: TMessage) {
+  addMessage({
+    message,
+    roomName,
+    userLogin,
+  }: {
+    userLogin: string;
+    roomName: string;
+    message: TMessage;
+  }) {
     const foundUser = this.users.find((user) => user.login === userLogin);
-    const isFoundRoom = Object.keys(foundUser?.rooms || {}).includes?.(
-      roomName,
-    );
+    const isFoundRoom = Object.keys(this.rooms).includes?.(roomName);
 
     if (!foundUser) {
       throw new WsException({ message: 'Такой пользователь не найден!' });
@@ -93,27 +119,26 @@ export class UsersService {
       throw new WsException({ message: 'У вас такой комнаты нет!' });
     }
 
-    foundUser.rooms[roomName].messages = [
-      ...foundUser.rooms[roomName].messages,
-      message,
-    ];
-    return new HttpException(`Комната добавлена`, HttpStatus.CREATED);
+    this.rooms[roomName].messages = [...this.rooms[roomName].messages, message];
   }
 
-  getAllRooms(userLogin: string) {
-    const rooms =
-      this.users.find((user) => user.login === userLogin)?.rooms || [];
+  getRooms(userLogin: string) {
+    const roomNames = Object.keys(this.rooms).filter((roomName) =>
+      this.rooms[roomName].users.includes(userLogin),
+    );
+    const rooms = roomNames.reduce<TRooms>((acc, roomName) => {
+      const roomData = this.rooms[roomName];
+      const filteredMessages = roomData.messages.filter(
+        (message) => !(message.isJoin && message.userLogin === userLogin),
+      );
+      acc[roomName] = {
+        ...roomData,
+        messages: filteredMessages,
+      };
+
+      return acc;
+    }, {});
 
     return rooms;
-  }
-
-  getRoomData(userLogin: string, roomName: string) {
-    const currentUser = this.getUserByName(userLogin);
-    const roomMessages = currentUser.rooms?.[roomName] || {
-      messages: [],
-      users: [],
-    };
-
-    return roomMessages;
   }
 }
