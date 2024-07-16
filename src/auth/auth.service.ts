@@ -42,18 +42,28 @@ export class AuthService {
   }
 
   async registration(data: SignUp) {
-    if (data.login && data.email) {
-      this.usersService.addUser(data);
-
+    if (!data.login || !data.email) {
       return new HttpException(
-        'Вы успешно зарегистрированы!',
-        HttpStatus.CREATED,
+        'Должны быть указаны имя и почта!',
+        HttpStatus.BAD_REQUEST,
       );
     }
 
-    throw new HttpException(
-      'Должны быть указаны имя и почта!',
-      HttpStatus.BAD_REQUEST,
+    const users = this.usersService.getAllUsers();
+    const foundUser = users.find((user) => user.login === data.login);
+
+    if (foundUser) {
+      throw new HttpException(
+        'Имя должно быть уникальным!',
+        HttpStatus.CONFLICT,
+      );
+    }
+
+    this.usersService.addUser(data);
+
+    return new HttpException(
+      'Вы успешно зарегистрированы!',
+      HttpStatus.CREATED,
     );
   }
 
